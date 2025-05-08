@@ -1,0 +1,87 @@
+networks:
+  local-genai-network:
+    driver: bridge
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://backend:8000
+      - VITE_WS_URL=ws://backend:8000
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+
+  router:
+    build:
+      context: ./router
+    ports:
+      - "8080:8080"
+    env_file: .env
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+
+  master-agent:
+    build:
+      context: ./master-agent
+    env_file: .env
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+    depends_on:
+      - router
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    env_file: .env
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - router
+      - migration_svc
+    volumes:
+      - shared-files-volume:${DEFAULT_FILES_FOLDER_NAME:-/files}
+
+  postgres:
+    build:
+      context: ./backend/scripts
+      dockerfile: ./Dockerfile.postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+    volumes:
+        - ./backend/scripts/postgres.conf:/etc/postgresql/postgresql.conf
+        - postgres-volume:/var/lib/postgresql/data
+
+  migration_svc:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    networks:
+      - local-genai-network
+    restart: on-failure
+    command: ["alembic", "upgrade", "head"]
+
+volumes:
+  postgres-volume:
+  shared-files-volume:

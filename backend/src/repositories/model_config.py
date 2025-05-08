@@ -1,0 +1,77 @@
+from typing import Optional
+from uuid import UUID
+
+from sqlalchemy import and_, select
+from src.auth.encrypt import encrypt_secret
+from src.schemas.api.model_config.dto import ModelConfigDTO
+from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigUpdate
+from src.models import ModelConfig, User
+from src.repositories.base import CRUDBase
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
+
+
+class ModelConfigRepository(
+    CRUDBase[ModelConfig, ModelConfigCreate, ModelConfigUpdate]
+):
+    async def get_config_by_user(
+        self, db: AsyncSession, user_model: User, config_id: str
+    ) -> Optional[ModelConfigDTO]:
+        config = await self.get_by_user(db=db, id_=config_id, user_model=user_model)
+        if not config:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model config with id {config_id} does not exist",
+            )
+
+        return ModelConfigDTO(
+            id=config_id,
+            name=config.name,
+            model=config.model,
+            provider=config.provider,
+            system_prompt=config.system_prompt,
+            temperature=config.temperature,
+            credentials=config.credentials,
+        )
+
+    async def find_model_by_config_name(
+        self,
+        db: AsyncSession,
+        config_name: str,
+        user_model: User,
+    ) -> Optional[ModelConfig]:
+        q = await db.execute(
+            select(self.model).where(
+                and_(
+                    self.model.name == config_name,
+                    self.model.creator_id == user_model.id,
+                )
+            )
+        )
+        return q.scalars().first()
+
+    async def create_model_config_with_encryption(
+        self,
+        db: AsyncSession,
+        obj_in: ModelConfigCreate,
+        user_model: User,
+    ) -> ModelConfig:
+        if obj_in.credentials:
+            if api_key := obj_in.credentials.get("api_key"):
+                obj_in.credentials["api_key"] = encrypt_secret(api_key)
+        return await self.create_by_user(db=db, obj_in=obj_in, user_model=user_model)
+
+    async def update_model_config_with_encryption(
+        self,
+        db: AsyncSession,
+        id_: UUID,
+        obj_in: ModelConfigUpdate,
+        user_model: User,
+    ) -> ModelConfig:
+        if obj_in.credentials:
+            if api_key := obj_in.credentials.get("api_key"):
+                obj_in.credentials["api_key"] = encrypt_secret(api_key)
+        return await self.update_by_user(db=db, id_=id_, obj_in=obj_in, user=user_model)
+
+
+model_config_repo = ModelConfigRepository(ModelConfig)

@@ -1,0 +1,57 @@
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+from pydantic import BaseModel
+from uuid import UUID
+from src.schemas.api.agent.schemas import AgentGet
+from src.schemas.ws.frontend import AgentResponseDTO
+from src.schemas.api.files.dto import FileDTO
+
+
+class MLAgentSchema(BaseModel):
+    agent_id: str
+    agent_name: str
+    agent_description: str
+    agent_input_schema: dict[str, Any]
+
+
+class MLAgentDTO(MLAgentSchema):
+    created_at: datetime
+    updated_at: datetime
+    is_active: bool
+
+
+class MLAgentJWTDTO(MLAgentDTO):
+    agent_jwt: Optional[str] = None
+
+
+class AgentDTO(AgentGet):
+    id: Union[UUID, str]
+    created_at: datetime
+    updated_at: datetime
+
+
+class AgentsDTO(BaseModel):
+    agents: List[AgentDTO]
+
+
+class ActiveAgentsDTO(BaseModel):
+    count_active_connections: int
+    active_connections: List[Optional[Dict[str, Any]]]
+
+
+class ActiveAgentsWithQueryParams(ActiveAgentsDTO):
+    limit: int
+    offset: int
+
+
+class AgentResponseWithFilesDTO(AgentResponseDTO):
+    files: List[Optional[FileDTO]] = []
+
+
+class AgentTypeResponseDTO(BaseModel):
+    type: str = "agent_response"  # TODO:enum
+    response: AgentResponseWithFilesDTO
+
+
+class AgentDTOWithJWT(AgentDTO):
+    jwt: Optional[str] = None
