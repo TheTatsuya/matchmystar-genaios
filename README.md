@@ -24,8 +24,8 @@ Make sure you have the following installed:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/genai-works-org/genai_monorepo.git
-   cd genai_monorepo/
+   git clone https://github.com/genai-works-org/genai-agentos.git
+   cd genai-agentos/
    ```
 
 2. Create a `.env` file by copying the example:
@@ -86,7 +86,7 @@ Ngrok can be used to expose the local WebSocket endpoint.
 
 ## 📎 Repository Link
 
-👉 [GitHub Repository](https://github.com/genai-works-org/genai_monorepo)
+👉 [GitHub Repository](https://github.com/genai-works-org/genai-agentos)
 
 ---
 

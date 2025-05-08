@@ -1,6 +1,6 @@
 
 
-$repo = "genai-works-org/genai_monorepo"
+$repo = "genai-works-org/genai-agentos"
 $gh_token=$env:GITHUB_TOKEN
 
 # Get the latest release data

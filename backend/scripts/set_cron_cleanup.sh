@@ -10,4 +10,4 @@ SELECT cron.schedule(
 "
 echo $PSQL_COMMAND
 
-docker exec -it -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD genai_monorepo-postgres-1 psql -U $POSTGRES_USER -d postgres -c "$PSQL_COMMAND"
+docker exec -it -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD genai-agentos-postgres-1 psql -U $POSTGRES_USER -d postgres -c "$PSQL_COMMAND"

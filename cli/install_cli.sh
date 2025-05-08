@@ -5,7 +5,7 @@ if [[ -z "$TOKEN" ]]; then
   exit 1
 fi
 
-REPO="genai-works-org/genai_monorepo"
+REPO="genai-works-org/genai-agentos"
 
 function gh_curl() {
   curl -sL -H "Authorization: token $TOKEN" \

@@ -97,7 +97,7 @@ POSTGRES_PORT=5432
 #### ✅ `alembic upgrade head` will do the trick . 
 ### ❌ Back-end won't start if you omit migrations ❌
 ---
-### ⚠️  Before starting your back-end app - make sure the [`router`](https://github.com/genai-works-org/genai_monorepo/tree/main/router) service is up and running.
+### ⚠️  Before starting your back-end app - make sure the [`router`](https://github.com/genai-works-org/genai-agentos/tree/main/router) service is up and running.
 
 ❓ **Still cannot connect to the `router`** ❓ 
 Although we are recommending to run genai infra via `docker compose`, you need to make sure `router`'s process is up and running.
