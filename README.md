@@ -49,7 +49,7 @@ Make sure you have the following installed:
 4. After startup:
 
    * Swagger API Docs: [http://localhost:8000/docs#/](http://localhost:8000/docs#/)
-   * Frontend UI: [http://localhost:8001/](http://localhost:8001/)
+   * Frontend UI: [http://localhost:3000/](http://localhost:3000/)
 
 ## 🌐 Ngrok Setup (Optional)
 
