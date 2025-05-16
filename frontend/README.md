@@ -44,7 +44,7 @@ More details check here - [Vite Env Variables and Modes](https://vite.dev/guide/
    npm run dev
    ```
 
-The application will be available at `http://localhost:5173`
+The application will be available at `http://localhost:3000`
 
 ## Production
 
@@ -64,12 +64,20 @@ The build output will be in the `dist` directory.
    ```bash
    npm run prod
    ```
+   The application will be available at `http://localhost:3000`
 
 2. Using Docker:
    ```bash
-   docker build -t magic-patterns-frontend .
-   docker run -p 5173:5173 magic-patterns-frontend
+   # Build the Docker image
+   docker build -t genai-frontend .
+   
+   # Run the container
+   docker run -p 3000:3000 genai-frontend
    ```
+   The application will be available at `http://localhost:3000`
+
+   Note: The `-p 3000:3000` flag maps the container's port 3000 to your host machine's port 3000. 
+   You can change the host port by modifying the first number (e.g., `-p 8080:3000` to access via `http://localhost:8080`).
 
 ## Testing
 
@@ -78,6 +86,37 @@ Run the test suite:
 ```bash
 npm test
 ```
+
+## Port Configuration
+
+The application uses different ports in various environments. Here's how to change them:
+
+### Development Server (Vite)
+The development server port is configured in `vite.config.ts`:
+```typescript
+server: {
+  port: 3000,
+  open: true,
+}
+```
+For more details, see [Vite Server Options](https://vitejs.dev/config/server-options.html)
+
+### Production Server (serve)
+The production server port is configured in two places:
+
+1. In `Dockerfile`:
+```dockerfile
+EXPOSE 3000
+CMD [ "serve", "-s", "dist", "-l", "3000" ]
+```
+
+2. When running with Docker, you can map to a different host port:
+```bash
+# Map container port 3000 to host port 8080
+docker run -p 8080:3000 genai-frontend
+```
+
+For more details about serve configuration, see [serve-handler options](https://github.com/vercel/serve-handler#options)
 
 ## Available Scripts
 
@@ -98,10 +137,3 @@ npm test
   - `utils/`: Utility functions
   - `App.tsx`: Main application component
   - `main.tsx`: Application entry point
-
-## Contributing
-
-1. Create a new branch for your feature
-2. Make your changes
-3. Run tests and linting
-4. Submit a pull request

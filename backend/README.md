@@ -141,7 +141,7 @@ Back-end's primary role is to  be a de-facto proxy between `front-end`, `master 
 ---
 ### Communication with GenAI Session library
 ---
-Back-end is de-facto useless without [`genai_session`](https://github.com/genai-works-org/genai_session) library. All of the GenAI infrasture pieces are tightly coupled together by design.
+Back-end is de-facto useless without [`genai_protocol`](https://github.com/genai-works-org/genai-protocol) library. All of the GenAI infrasture pieces are tightly coupled together by design.
 
 Architecturally, `back-end` is also recognized as **an agent** by the session library and the router.
 
@@ -190,10 +190,7 @@ Other fields are pretty much self-explanatory
 {
         "message": "What is the time in kyiv rn?",
         "llm": {
-            "provider": "azure openai",
-            "model": "gpt-4o-mini",
-            "temperature": 0.0,
-            "system_prompt": "Some large string"
+            "llm_name": "mymodelconfig"
         },
         "files": [
             "55704c5d-2d9b-4e5a-9d01-c6816cac5aa2",
@@ -202,6 +199,8 @@ Other fields are pretty much self-explanatory
     }
 ```
 where all json fields are optional, except for the `message`.
+
+`mymodelconfig` is the name of the model configuration that contains the information about the model selection, API keys, etc. You can create this config either via UI or POST request to the `/api/llms/model_config` endpoint. The value of the `api_key` will be encrypted.
 
 **If front-end message is malformed, message about the validation error is returned**
 
@@ -257,11 +256,11 @@ To get to the swagger documentation page - visit root url - `/` or `/docs`.
 
 To authenticate in the swagger docs - click on the `Authorize` button in the top right side of the docs page:
 
-![alt text](image.png)
+![authorize_btn](docs/authorize.png)
 
 Provide your credentials in the following pop-up menu:
 
-![alt text](image-1.png)
+![auth_form](docs/login_form.png)
 
 ⚠️ Ignore `client_id` and `client_secret` fields in the pop-up menu.
 

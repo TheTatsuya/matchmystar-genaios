@@ -92,19 +92,19 @@ Ngrok can be used to expose the local WebSocket endpoint.
 
 ## 💎 Environment Variables
 
-| Variable                    | Description                                                          | Example / Default                                                             |
-|-----------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| `FRONTEND_PORT`             | Port to start a frontend    | `3000` - default. Can be changed by run in terminal ` source FRONTEND_PORT=<your_port>`  |
-| `ROUTER_WS_URL`             | WebSocket URL for the `router` container                             | `ws://router:8080/ws` - host is either `localhost` or `router` container name |
-| `SECRET_KEY`                | Secret key for cryptographic operations - JWT/ LLM config encryption | `$(openssl rand -hex 32)`                                                     |
-| `POSTGRES_HOST`             | PostgreSQL Host                                                      | `postgres`                                                                    |
-| `POSTGRES_USER`             | PostgreSQL Username                                                  | `mycustompostgresuser`                                                        |
-| `POSTGRES_PASSWORD`         | PostgreSQL Password                                                  | `mycustompostgrespassword`                                                    |
-| `POSTGRES_DB`               | PostgreSQL Database Name                                             | `genai_db`                                                                    |
-| `POSTGRES_PORT`             | PostgreSQL Port                                                      | `5432`                                                                        |
-| `DEBUG`                     | Enable/disable debug mode - Server/ ORM logging                      | `True` / `False`                                                              |
-| `MASTER_AGENT_API_KEY`      | API key for the Master Agent - internal identifier                   | `e1adc3d8-fca1-40b2-b90a-7b48290f2d6a::master_server_ml`                      |
-| `MASTER_BE_API_KEY`         | API key for the Master Backend - internal identifier                 | `7a3fd399-3e48-46a0-ab7c-0eaf38020283::master_server_be`                      |
-| `BACKEND_CORS_ORIGINS`      | Allowed CORS origins for the `backend`                               | `["*"]`, `["http://localhost"]`                                               |
-| `DEFAULT_FILES_FOLDER_NAME` | Default folder for file storage - Docker file volume path            | `/files`                                                                      |
-| `CLI_BACKEND_ORIGIN_URL`    | `backend` URL for CLI access                                         | `http://localhost:8000`                                                       |
+| Variable                    | Description                                                          | Example / Default                                                                       |
+|-----------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `FRONTEND_PORT`             | Port to start a frontend                                             | `3000` - default. Can be changed by run in terminal ` source FRONTEND_PORT=<your_port>` |
+| `ROUTER_WS_URL`             | WebSocket URL for the `router` container                             | `ws://router:8080/ws` - host is either `localhost` or `router` container name           |
+| `SECRET_KEY`                | Secret key for cryptographic operations - JWT/ LLM config encryption | `$(openssl rand -hex 32)`                                                               |
+| `POSTGRES_HOST`             | PostgreSQL Host                                                      | `postgres`                                                                              |
+| `POSTGRES_USER`             | PostgreSQL Username                                                  | `postgres`                                                                              |
+| `POSTGRES_PASSWORD`         | PostgreSQL Password                                                  | `postgres`                                                                              |
+| `POSTGRES_DB`               | PostgreSQL Database Name                                             | `postgres`                                                                              |
+| `POSTGRES_PORT`             | PostgreSQL Port                                                      | `5432`                                                                                  |
+| `DEBUG`                     | Enable/disable debug mode - Server/ ORM logging                      | `True` / `False`                                                                        |
+| `MASTER_AGENT_API_KEY`      | API key for the Master Agent - internal identifier                   | `e1adc3d8-fca1-40b2-b90a-7b48290f2d6a::master_server_ml`                                |
+| `MASTER_BE_API_KEY`         | API key for the Master Backend - internal identifier                 | `7a3fd399-3e48-46a0-ab7c-0eaf38020283::master_server_be`                                |
+| `BACKEND_CORS_ORIGINS`      | Allowed CORS origins for the `backend`                               | `["*"]`, `["http://localhost"]`                                                         |
+| `DEFAULT_FILES_FOLDER_NAME` | Default folder for file storage - Docker file volume path            | `/files`                                                                                |
+| `CLI_BACKEND_ORIGIN_URL`    | `backend` URL for CLI access                                         | `http://localhost:8000`                                                                 |

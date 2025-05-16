@@ -1,20 +1,20 @@
 import uuid
+from typing import List
 
 from sqlalchemy import ForeignKey
-from src.db.base import Base
-
-from typing import List
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.db.annotations import (
     created_at,
-    updated_at,
     int_pk,
-    uuid_pk,
+    last_invoked_at,
     not_null_json_column,
     not_null_json_column_flow,
-    last_invoked_at,
+    updated_at,
+    uuid_pk,
 )
+from src.db.base import Base
 
 
 class UserProjectAssociation(Base):
@@ -239,3 +239,6 @@ class ModelConfig(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )
     creator: Mapped["User"] = relationship(back_populates="model_configs")
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]

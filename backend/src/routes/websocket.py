@@ -4,26 +4,25 @@ import traceback
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
+from genai_session.session import AgentResponse, GenAISession
+from genai_session.utils.naming_enums import MasterServerName
 from pydantic import ValidationError
 
-from genai_session.session import GenAISession, AgentResponse
-from genai_session.utils.naming_enums import MasterServerName
-from src.utils.websocket import get_current_ws_user
-from src.schemas.api.agent.dto import AgentResponseWithFilesDTO, AgentTypeResponseDTO
 from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
+from src.repositories.files import files_repo
+from src.repositories.model_config import model_config_repo
+from src.schemas.api.agent.dto import AgentResponseWithFilesDTO, AgentTypeResponseDTO
 from src.schemas.ws.frontend import (
     AgentResponseDTO,
     IncomingFrontendMessage,
-    LLMPropertiesDTO,
     LLMPropertiesDecryptCreds,
+    LLMPropertiesDTO,
 )
-
 from src.schemas.ws.ml import OutgoingMLRequestSchema
 from src.utils.get_agents_and_flows import query_agents_and_flows
 from src.utils.validation_error_handler import validation_exception_handler
-from src.repositories.files import files_repo
-from src.repositories.model_config import model_config_repo
+from src.utils.websocket import get_current_ws_user
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -149,6 +148,26 @@ async def handle_frontend_ws(
             )
 
             if users_model_config:
+                valid_api_key = (
+                    await model_config_repo.lookup_provider_for_valid_api_key(
+                        db=db,
+                        user_model=user_model,
+                        provider_name=users_model_config.provider,
+                    )
+                )
+                updated_credentials = {}
+
+                # looking up existing config if credentials are available in the modelconfig
+                api_key = users_model_config.credentials.get("api_key")
+                if api_key:
+                    updated_credentials = {
+                        **users_model_config.credentials,
+                        "api_key": valid_api_key,
+                    }
+
+                else:
+                    updated_credentials = users_model_config.credentials
+
                 try:
                     enriched_llm_props = LLMPropertiesDecryptCreds(
                         config_name=users_model_config.name,
@@ -156,8 +175,9 @@ async def handle_frontend_ws(
                         model=users_model_config.model,
                         temperature=users_model_config.temperature,
                         system_prompt=users_model_config.system_prompt,
-                        credentials=users_model_config.credentials,
+                        credentials=updated_credentials,
                     )
+
                 except ValueError:
                     await websocket.send_json(
                         {

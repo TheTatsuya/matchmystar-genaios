@@ -1,14 +1,14 @@
 from typing import Optional
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.encrypt import encrypt_secret
-from src.schemas.api.model_config.dto import ModelConfigDTO
-from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigUpdate
 from src.models import ModelConfig, User
 from src.repositories.base import CRUDBase
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
+from src.schemas.api.model_config.dto import ModelConfigDTO
+from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigUpdate
 
 
 class ModelConfigRepository(
@@ -49,6 +49,32 @@ class ModelConfigRepository(
             )
         )
         return q.scalars().first()
+
+    async def lookup_provider_for_valid_api_key(
+        self, db: AsyncSession, user_model: User, provider_name: str
+    ) -> Optional[str]:
+        """
+        Helper method to lookup existing api_key per provider per user
+        as frontend does not store the api_key and sends asterisks after the initial config setting
+
+        Returns:
+            encrypted api_key
+        """
+        q = await db.execute(
+            select(self.model)
+            .where(
+                and_(
+                    self.model.provider == provider_name,
+                    self.model.creator_id == user_model.id,
+                )
+            )
+            .order_by(self.model.created_at.desc())
+        )
+        model_config = q.scalars().first()
+        if not model_config:
+            return
+
+        return model_config.credentials.get("api_key")
 
     async def create_model_config_with_encryption(
         self,
