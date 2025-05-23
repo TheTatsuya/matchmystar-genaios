@@ -51,6 +51,9 @@ Make sure you have the following installed:
    * Swagger API Docs: [http://localhost:8000/docs#/](http://localhost:8000/docs#/)
    * Frontend UI: [http://localhost:3000/](http://localhost:3000/)
 
+## 👾 Supported Providers and Models
+* OpenAI: gpt-4o
+
 ## 🌐 Ngrok Setup (Optional)
 
 Ngrok can be used to expose the local WebSocket endpoint.
