@@ -1,14 +1,16 @@
 from typing import Optional
+from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 
 from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
+from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
 from src.schemas.api.flow.dto import AgentFlowDTO
-from uuid import UUID
-from fastapi.responses import Response
-
 from src.schemas.api.flow.schemas import AgentFlowCreate, AgentFlowUpdate
+from src.schemas.base import AgentDTOPayload
 
 flow_router = APIRouter(tags=["agentflows"], prefix="/agentflows")
 
@@ -21,40 +23,41 @@ async def list_all_agentflows(
     limit: int = 100,
 ):
     # TODO: pagination
-    return await agentflow_repo.get_multiple_by_user(
+    return await agentflow_repo.get_all_flows_and_validate_all_flow_agents(
         db=db, user_model=user, offset=offset, limit=limit
     )
 
 
-@flow_router.get("/{agentflow_id}", response_model=AgentFlowDTO)
+@flow_router.get("/{agentflow_id}")
 async def get_agentflow_data(
     db: AsyncDBSession, user: CurrentUserDependency, agentflow_id: UUID
 ):
-    agentflow = await agentflow_repo.get_by_user(
-        db=db,
-        user_model=user,
-        id_=agentflow_id,
+    agentflow = await agentflow_repo.get_flow_and_validate_all_flow_agents(
+        db=db, flow_id=agentflow_id, user_model=user
     )
-    if not agentflow:
-        raise HTTPException(
-            status_code=400, detail=f"agentflow {str(agentflow_id)} was not found."
-        )
-    return agentflow
+
+    dto: Optional[AgentDTOPayload] = await agent_repo.orm_flow_to_dto(
+        flow=agentflow, db=db
+    )
+    return dto.model_dump(exclude_none=True)
 
 
-@flow_router.post("/register-flow", response_model=Optional[AgentFlowDTO])
+@flow_router.post("/register")
 async def register_agentflow(
     db: AsyncDBSession,
     user: CurrentUserDependency,
     agentflow_in: AgentFlowCreate,
 ):
     await agentflow_repo.validate_all_agents_in_flow_are_active(
+        obj_in=agentflow_in, user_model=user
+    )
+    result = await agentflow_repo.create_by_user(
         db=db, obj_in=agentflow_in, user_model=user
     )
-
-    return await agentflow_repo.create_by_user(
-        db=db, obj_in=agentflow_in, user_model=user
+    dto: Optional[AgentDTOPayload] = await agent_repo.orm_flow_to_dto(
+        flow=result, db=db
     )
+    return dto.model_dump(exclude_none=True)
 
 
 @flow_router.patch("/{agentflow_id}")

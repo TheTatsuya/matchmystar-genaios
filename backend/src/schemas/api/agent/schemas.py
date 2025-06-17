@@ -1,12 +1,19 @@
 from typing import Optional, Union
 from uuid import UUID, uuid4
-from pydantic import BaseModel, field_validator, Field
+
 from fastapi import HTTPException
+from pydantic import BaseModel, Field, field_validator
 
 
 class AgentBase(BaseModel):
     name: str
     description: str
+
+    @field_validator("name")
+    def check_name_length(cls, v):
+        if len(v) <= 55:
+            return v.replace(" ", "_").lower()
+        raise ValueError("Agent name must be less than 55 characters")
 
 
 class AgentCreateBase(AgentBase):
@@ -44,6 +51,11 @@ class AgentUpdate(AgentBase):
     input_parameters: Union[dict, str]  # TODO: validate for description and type fields
     # if agent update model is explicitly called -> we assume the agent is active  # noqa: E501
     is_active: bool = True
+    alias: Optional[str] = Field(default=None)
+
+
+class AgentCRUDUpdate(AgentBase):
+    input_parameters: Union[dict, str]
 
 
 class AgentRegister(AgentCreate):

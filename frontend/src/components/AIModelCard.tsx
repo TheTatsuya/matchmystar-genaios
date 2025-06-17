@@ -1,40 +1,28 @@
-import { useState } from 'react';
 import type { FC } from 'react';
-import { AIModel } from '../services/apiService';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  IconButton,
-  Box,
-  Button,
-  Paper,
-} from '@mui/material';
+import { Card, CardContent, Typography, IconButton, Box } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { ModelConfig } from '../types/model';
 
 interface AIModelCardProps {
-  modelData: AIModel;
+  modelData: ModelConfig;
   onEdit: () => void;
   onDelete: () => void;
   isSelected: boolean;
-  onSelect: (model: AIModel) => void;
+  provider: string;
 }
 
 export const AIModelCard: FC<AIModelCardProps> = ({
-  modelData, 
+  modelData,
   onEdit,
   onDelete,
-  isSelected = false,
-  onSelect
+  isSelected,
+  provider,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { name, model, provider, temperature, system_prompt } = modelData;
+  const { name, model, temperature, max_last_messages } = modelData;
 
   return (
-    <Card 
-      onClick={() => onSelect(modelData)}
+    <Card
       sx={{
         position: 'relative',
         border: isSelected ? 3 : 1,
@@ -46,13 +34,26 @@ export const AIModelCard: FC<AIModelCardProps> = ({
         },
       }}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <CardContent sx={{ p: '12px' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}
+        >
           <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" component="h3" color="text.primary">
+            <Typography
+              variant="h6"
+              component="h3"
+              color="text.primary"
+              sx={{ fontSize: '18px', fontWeight: 600 }}
+            >
               {name}
             </Typography>
-            <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box
+              sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}
+            >
               <Typography variant="body2" color="text.secondary">
                 Model: {model}
               </Typography>
@@ -62,71 +63,36 @@ export const AIModelCard: FC<AIModelCardProps> = ({
               <Typography variant="body2" color="text.secondary">
                 Temperature: {temperature}
               </Typography>
+              <Typography variant="body2" color="text.secondary">
+                LLM context length: {max_last_messages}
+              </Typography>
             </Box>
           </Box>
-          <Box>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
             <IconButton
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onEdit();
               }}
               size="small"
+              sx={{ p: 0 }}
             >
               <EditIcon />
             </IconButton>
             <IconButton
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onDelete();
               }}
               color="error"
               size="small"
+              sx={{ p: 0 }}
             >
               <DeleteIcon />
             </IconButton>
           </Box>
         </Box>
-        
-        <Box sx={{ mt: 2 }}>
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(!isExpanded);
-            }}
-            startIcon={isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            size="small"
-            color="inherit"
-            sx={{
-              textTransform: 'none',
-              fontSize: '0.875rem',
-              color: 'text.secondary',
-              '&:hover': {
-                backgroundColor: 'transparent',
-                color: 'text.primary',
-              },
-              p: 0,
-              minWidth: 'auto',
-            }}
-          >
-            {isExpanded ? 'Hide prompt' : 'Show prompt'}
-          </Button>
-          {isExpanded && (
-            <Paper
-              elevation={0}
-              sx={{
-                mt: 1,
-                p: 1,
-                bgcolor: 'grey.50',
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {system_prompt}
-              </Typography>
-            </Paper>
-          )}
-        </Box>
       </CardContent>
     </Card>
   );
-}; 
+};
