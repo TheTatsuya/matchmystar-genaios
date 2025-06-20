@@ -6,6 +6,7 @@ from typing import Any, Optional
 from urllib.parse import urlparse, urlunparse
 from uuid import UUID
 
+from fastapi import HTTPException
 from mcp.types import Tool
 from pydantic import AnyHttpUrl
 from sqlalchemy import and_, select, update
@@ -30,13 +31,21 @@ def generate_alias(agent_name: str):
 
 def get_user_id_from_jwt(token: str) -> Optional[str]:
     token_data = validate_token(token=token, lifespan_type=TokenLifespanType.api)
+    if not token_data:
+        raise HTTPException(status_code=400, detail="JWT token is invalid or expired")
     return token_data.sub
 
 
 def mcp_tool_to_json_schema(
     tool: Tool | MCPToolDTO, aliased_title: Optional[str] = None
 ) -> dict:
-    tool_dict = tool.model_dump(exclude_none=True)
+    if isinstance(tool, MCPToolDTO):
+        tool_dict = tool.model_dump(exclude_none=True)
+        tool_dict.pop("id")
+        tool_dict.pop("alias")
+        tool_dict.pop("mcp_server_id")
+    else:
+        tool_dict = tool.model_dump(exclude_none=True)
 
     if tool_dict.get("annotations"):
         tool_dict.pop("annotations")
@@ -258,14 +267,15 @@ class FlowValidator:
         """
         active_flows = await db.scalars(
             select(AgentWorkflow)
-            .where(AgentWorkflow.is_active.is_(True))
             .order_by(AgentWorkflow.created_at)
+            .order_by(AgentWorkflow.created_at.desc())
         )
-        flows: list[AgentWorkflow] = active_flows.all()
-
-        for flow in flows:
+        agentflows: list[AgentWorkflow] = active_flows.all()
+        flow_ids = [f.id for f in agentflows]
+        flows = [f.flow for f in agentflows]
+        for flow_id, flow in zip(flow_ids, flows):
             flow_agent_ids = []  # either mcp/a2a ids
-            for tool in flow.flow:
+            for tool in flow:
                 if tool["type"] == agent_type.value:
                     flow_agent_ids.append(tool)
 
@@ -290,14 +300,14 @@ class FlowValidator:
                 ):
                     await db.execute(
                         update(AgentWorkflow)
-                        .where(AgentWorkflow.id == flow.id)
+                        .where(AgentWorkflow.id == flow_id)
                         .values({"is_active": False})
                     )
                     await db.commit()
                 else:
                     await db.execute(
                         update(AgentWorkflow)
-                        .where(AgentWorkflow.id == flow.id)
+                        .where(AgentWorkflow.id == flow_id)
                         .values({"is_active": True})
                     )
                     await db.commit()
@@ -320,14 +330,44 @@ class FlowValidator:
                 ):
                     await db.execute(
                         update(AgentWorkflow)
-                        .where(AgentWorkflow.id == flow.id)
+                        .where(AgentWorkflow.id == flow_id)
                         .values({"is_active": False})
                     )
                     await db.commit()
                 else:
                     await db.execute(
                         update(AgentWorkflow)
-                        .where(AgentWorkflow.id == flow.id)
+                        .where(AgentWorkflow.id == flow_id)
+                        .values({"is_active": True})
+                    )
+                    await db.commit()
+
+            if AgentType.genai == agent_type:
+                active_agents = await db.scalars(
+                    select(Agent).where(
+                        and_(
+                            Agent.id.in_([a["id"] for a in flow_agent_ids]),
+                            Agent.is_active.is_(True),
+                        )
+                    )
+                )
+                if len(active_agents.all()) != len(
+                    [
+                        f["id"]
+                        for f in flow_agent_ids
+                        if f["type"] == AgentType.genai.value
+                    ]
+                ):
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow_id)
+                        .values({"is_active": False})
+                    )
+                    await db.commit()
+                else:
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow_id)
                         .values({"is_active": True})
                     )
                     await db.commit()
