@@ -157,6 +157,10 @@ python <agent_name>.py
 ### ❓ MCP server or A2A card URL could not be accessed by the genai-backend
 ✅ If your MCP server or A2A card is hosted on your local machine, make sure to change the host name from `http://localhost:<your_port>` to `http://host.docker.internal:<your_port>` and try again.
 
+🔎 **Also make sure to pass the full url of your MCP server or A2A card, such as - `http://host.docker.internal:8000/mcp` for MCP or `http://host.docker.internal:10002` for A2A**
+
+⚠️ No need to specify `/.well-known/agent.json` for your A2A card as `genai-backend` will do it for you!
+
 ### ❓ My MCP server with valid host cannot be accessed by the genai-backend 
 ✅ Make sure your MCP server supports `streamable-http` protocol and is remotely accessible.Also make sure that you're specifiying full URL of your server, like - `http://host.docker.internal:8000/mcp`
 
