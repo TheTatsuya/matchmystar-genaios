@@ -3,12 +3,13 @@ import traceback
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dependencies import CurrentUserDependency
-from src.db.session import AsyncDBSession
+from src.db.session import AsyncDBSession, get_middleware_db
 from src.repositories.model_config import model_config_repo
 from src.schemas.api.model_config.dto import (
     ModelConfigDTO,
@@ -31,8 +32,8 @@ llm_router = APIRouter(prefix="/llm", tags=["LLM"])
 
 @llm_router.get("/model/configs")
 async def list_model_configs(
-    db: AsyncDBSession,
     user_model: CurrentUserDependency,
+    db: AsyncSession = Depends(get_middleware_db),
     limit: int = 100,
     offset: int = 0,
 ):
@@ -165,3 +166,13 @@ async def get_model_prompt(
     model: Optional[str] = None,
 ):
     return ModelPromptDTO(default_system_prompt=DEFAULT_SYSTEM_PROMPT)
+
+
+@llm_router.get("/hackathon/genai")
+async def get_genai_provider_data(
+    db: AsyncDBSession,
+    user_model: CurrentUserDependency,
+):
+    return await model_config_repo.get_default_genai_provider(
+        db=db, user_id=user_model.id
+    )
