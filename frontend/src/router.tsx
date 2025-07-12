@@ -14,6 +14,7 @@ const AgentsPage = lazy(() => import('./pages/AgentsPage'));
 const AgentFlowsPage = lazy(() => import('./pages/AgentFlowsPage'));
 const AgentFlowsEditPage = lazy(() => import('./pages/AgentFlowsEditPage'));
 const AgentsTracePage = lazy(() => import('./pages/AgentsTracePage'));
+const MatchMyStarPage = lazy(() => import('./pages/MatchMyStarPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Loading component
@@ -141,6 +142,16 @@ export const router = createBrowserRouter(
         <ProtectedRoute>
           <Suspense fallback={<LoadingFallback />}>
             <MCPAgentsPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/matchmystar',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <MatchMyStarPage />
           </Suspense>
         </ProtectedRoute>
       ),

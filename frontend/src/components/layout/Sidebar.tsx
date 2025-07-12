@@ -38,6 +38,11 @@ const pages: PageLink[] = [
     title: 'New Agent Flow',
     Icon: NewFlowIcon,
   },
+  {
+    path: '/matchmystar',
+    title: 'MatchMyStar',
+    Icon: () => <span className="text-red-500 text-lg">❤️</span>,
+  },
 ];
 
 const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
