@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-AGENT_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyOWZhZWZlMS01YzNhLTQ5NzctYTEyNy0zMDVhMDA4OTQxNzMiLCJleHAiOjI1MzQwMjMwMDc5OSwidXNlcl9pZCI6IjIzYTEwZGRmLTk2NWMtNGEzMy05MmZkLWI4ZDNmMmJmMGQ1NiJ9.lwpLgP7A8qInFBh6eqxUvlBXQ5gcBiQdHN3VJaPu4Wo" # noqa: E501
+AGENT_JWT = os.environ.get("FILTER_PROFILE_AGENT_JWT", "")
 session = GenAISession(jwt_token=AGENT_JWT)
 
 SUPABASE_URL = os.environ.get('SUPABASE_URL')

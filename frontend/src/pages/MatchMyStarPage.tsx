@@ -201,7 +201,7 @@ const MatchMyStarPage = () => {
     return "";
   };
 
-  // Robust summary string parser for all backend formats
+  // Robust summary string parser for all backend formats, skips intro text
   function parseSummaryString(summary: string): { matches: any[]; analysis: string } {
     // Universal field extractor
     function extractField(block: string, field: string): string {
@@ -209,17 +209,20 @@ const MatchMyStarPage = () => {
       return block.match(regex)?.[1]?.trim() || '';
     }
 
+    // Start parsing from the first match block
+    const firstProfileIdx = summary.search(/\d+\. \*\*([^\*]+)\*\*/);
+    const relevant = firstProfileIdx !== -1 ? summary.slice(firstProfileIdx) : summary;
+
     // Profile regex: number, name, then all lines until next profile or end
     const profileRegex = /(\d+)\.\s+\*\*([^\*]+)\*\*([\s\S]*?)(?=\n\d+\. \*\*|$)/g;
     const matches = [];
     let match;
-    while ((match = profileRegex.exec(summary)) !== null) {
+    while ((match = profileRegex.exec(relevant)) !== null) {
       const name = match[2].trim();
       const block = match[3];
       const age = extractField(block, 'Age');
       const location = extractField(block, 'Location');
       const occupation = extractField(block, 'Occupation');
-      // Compatibility Score and Level (with or without parentheses)
       let compatibility_score = 0, compatibility_level = '';
       const compMatch = block.match(/\*\*Compatibility Score\*\*:?\s*(\d+)%\s*(?:\(([^)]+)\))?/);
       if (compMatch) {
@@ -229,7 +232,8 @@ const MatchMyStarPage = () => {
       const message_description =
         extractField(block, 'Summary') ||
         extractField(block, 'Description') ||
-        extractField(block, 'Message');
+        extractField(block, 'Message') ||
+        extractField(block, 'Recommendation');
       // Astrological details (optional)
       const nakshatra = extractField(block, 'Nakshatra');
       const rashi = extractField(block, 'Rashi');
@@ -239,9 +243,9 @@ const MatchMyStarPage = () => {
       });
     }
     // Analysis: everything after the last match
-    const lastMatch = [...summary.matchAll(profileRegex)].pop();
+    const lastMatch = [...relevant.matchAll(profileRegex)].pop();
     const analysis = lastMatch
-      ? summary.slice(summary.lastIndexOf(lastMatch[0]) + lastMatch[0].length).trim()
+      ? relevant.slice(relevant.lastIndexOf(lastMatch[0]) + lastMatch[0].length).trim()
       : '';
     return { matches, analysis };
   }

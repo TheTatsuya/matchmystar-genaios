@@ -2,8 +2,13 @@ import asyncio
 from typing import Annotated
 from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
+import os
+from dotenv import load_dotenv
 
-AGENT_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNmU2NzFlOC01N2FkLTRlMTMtYjZjYi1jMDMxZjQ1MmE0ZDciLCJleHAiOjI1MzQwMjMwMDc5OSwidXNlcl9pZCI6IjIzYTEwZGRmLTk2NWMtNGEzMy05MmZkLWI4ZDNmMmJmMGQ1NiJ9.xiCmeEV8t-BVwy0wj2GvCvTzY_dyX3meZ9XZpN6cVEY" # noqa: E501
+load_dotenv()
+
+# If AGENT_JWT is present, replace with os.environ.get usage
+AGENT_JWT = os.environ.get("ASTRO_DATA_AGENT_JWT", "")
 session = GenAISession(jwt_token=AGENT_JWT)
 
 @session.bind(
