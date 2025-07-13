@@ -4,7 +4,6 @@ from pdf2image import convert_from_path
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
-import os
 from deep_translator import GoogleTranslator
 
 # Tesseract should be installed and in PATH

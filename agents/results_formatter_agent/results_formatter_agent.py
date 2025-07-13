@@ -43,7 +43,7 @@ async def results_formatter_agent(
                 dob = datetime.strptime(match["dob"], "%Y-%m-%d")
                 current_year = datetime.now().year
                 age = current_year - dob.year
-            except:
+            except Exception:
                 age = 0
         
         # Get compatibility data
@@ -111,27 +111,20 @@ async def results_formatter_agent(
 
 def filter_best_matches(matches: list) -> list:
     """Filter matches based on smart logic - return best matches only"""
-    
     if not matches:
         return []
-    
-    # Separate matches by compatibility level
-    good_matches = [m for m in matches if m["compatibility_score"] >= 70]
-    moderate_matches = [m for m in matches if 50 <= m["compatibility_score"] < 70]
-    low_matches = [m for m in matches if m["compatibility_score"] < 50]
-    
-    # If we have good matches, return top 5 good matches
+
+    # Show all matches with message_type 'good' (up to 5)
+    good_matches = [m for m in matches if m.get("message_type") == "good"]
     if good_matches:
         return good_matches[:5]
-    
-    # If we have moderate matches, return top 5 moderate matches
-    if moderate_matches:
-        return moderate_matches[:5]
-    
-    # If only low matches, return only the best one
-    if low_matches:
-        return [low_matches[0]]  # Return only the best low match
-    
+
+    # If no good matches, show only the best bad match (highest compatibility_score)
+    bad_matches = [m for m in matches if m.get("message_type") == "bad"]
+    if bad_matches:
+        best_bad = max(bad_matches, key=lambda m: m.get("compatibility_score", 0))
+        return [best_bad]
+
     return []
 
 def extract_astrological_details(raw_response: dict, gender: str) -> dict:
