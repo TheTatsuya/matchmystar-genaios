@@ -60,7 +60,6 @@ const MatchMyStarPage = () => {
     const handleWebSocketMessage = (response: AgentResponse) => {
       if (response.type === 'agent_response') {
         try {
-          console.log('Raw WebSocket response:', response); // Debug log
           
           // Try to find the matches array at any depth
           let responseData;
@@ -70,7 +69,6 @@ const MatchMyStarPage = () => {
               responseData = JSON.parse(str);
             } else {
               // Not JSON, treat as plain message
-              console.log('Non-JSON string response from backend:', str); // <-- Add this line
               setMatches([]);
               setAnalysis(null);
               setNoMatchMessage(str || "We couldn't find any compatible matches for you right now. Please check back later as new profiles are added!");
@@ -93,9 +91,6 @@ const MatchMyStarPage = () => {
             analysis = responseData.response.analysis;
           }
 
-          console.log('Parsed response data:', responseData);
-          console.log('Found matches:', matches);
-
           if (matches && Array.isArray(matches) && matches.length > 0) {
             setMatches(matches);
             setAnalysis(analysis || null);
@@ -108,21 +103,18 @@ const MatchMyStarPage = () => {
                 showSuccess(analysis.overall_assessment);
               }
               if (analysis.message) {
-                console.log('MatchMyStar Analysis:', analysis.message);
+                // console.log('MatchMyStar Analysis:', analysis.message);
               }
             } else {
               showSuccess(`Found ${responseData.total_matches} matches!`);
             }
           } else {
-            console.log('Response format not recognized, using fallback'); // Debug log
-            console.log('ResponseData keys:', Object.keys(responseData || {})); // Debug log
             // Fallback for other response formats
             setMatches([]);
             setAnalysis(null);
             setNoMatchMessage("We couldn't find any compatible matches for you right now. Please check back later as new profiles are added!");
           }
         } catch (error) {
-          console.error('Error parsing response:', error);
           setMatches([{
             name: 'Response',
             age: 0,
@@ -465,7 +457,6 @@ const MatchMyStarPage = () => {
                           ? `# Match Results\n` + matches.map((m, i) => `## ${i+1}. ${m.name || 'Unknown'}\n- **Age:** ${m.age || ''}\n- **Location:** ${m.location || ''}\n- **Occupation:** ${m.occupation || ''}\n- **Compatibility Score:** ${m.compatibility_score || ''}%\n- **Message:** ${m.message_description || ''}`).join('\n\n')
                           : 'No matches found.');
                       const sanitized = sanitizeMarkdown(markdown);
-                      console.log('Markdown to render:', sanitized);
                       return <ReactMarkdown remarkPlugins={[remarkGfm]}>{sanitized}</ReactMarkdown>;
                     })()}
                   </div>

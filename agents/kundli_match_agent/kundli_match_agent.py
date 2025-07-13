@@ -5,6 +5,7 @@ from typing import Annotated, List, Dict, Any
 from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -77,7 +78,7 @@ async def kundli_match_agent(
     return results
 
 async def main():
-    print(f"Agent with token '{AGENT_JWT}' started")
+    logging.info("Kundli matching agent started.")
     await session.process_events()
 
 if __name__ == "__main__":
