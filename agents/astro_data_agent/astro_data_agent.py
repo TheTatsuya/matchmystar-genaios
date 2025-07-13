@@ -4,6 +4,7 @@ from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -28,7 +29,7 @@ async def astro_data_agent(
     return user_profile
 
 async def main():
-    print(f"Agent with token '{AGENT_JWT}' started")
+    logging.info("Astro data agent started.")
     await session.process_events()
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -247,7 +248,7 @@ def generate_analysis_message(matches: list, avg_score: float, max_score: int) -
         return f"Your best match shows {max_score}% compatibility. Consider consulting an astrologer for guidance."
 
 async def main():
-    print(f"Agent with token '{AGENT_JWT}' started")
+    logging.info("Results formatter agent started.")
     await session.process_events()
 
 if __name__ == "__main__":

@@ -4,11 +4,16 @@ from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
 from dotenv import load_dotenv
 import os
+import supabase
+import logging
 
 load_dotenv()
 
 AGENT_JWT = os.environ.get("GEOCODE_AGENT_JWT", "")
 session = GenAISession(jwt_token=AGENT_JWT)
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 
 @session.bind(
@@ -42,6 +47,26 @@ async def geocode_agent(
                 enriched_profile = user_profile.copy()
                 enriched_profile["lat"] = lat
                 enriched_profile["lon"] = lon
+
+                # Insert into Supabase if not already present
+                try:
+                    if SUPABASE_URL and SUPABASE_KEY:
+                        supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
+                        # Check for existing user by name, place, dob, tob
+                        query = supabase_client.table("profiles") \
+                            .select("id") \
+                            .eq("name", enriched_profile.get("name")) \
+                            .eq("place", enriched_profile.get("place")) \
+                            .eq("dob", enriched_profile.get("dob")) \
+                            .eq("tob", enriched_profile.get("tob")) \
+                            .execute()
+                        if not query.data:
+                            supabase_client.table("profiles").insert([enriched_profile]).execute()
+                except Exception as e:
+                    # Log error without exposing sensitive info
+                    import logging
+                    logging.warning("Supabase insert skipped or failed.")
+
                 return enriched_profile
             else:
                 return {"error": f"No coordinates found for {place}"}
@@ -50,7 +75,7 @@ async def geocode_agent(
 
 
 async def main():
-    print(f"Agent with token '{AGENT_JWT}' started")
+    logging.info("Geocode agent started.")
     await session.process_events()
 
 if __name__ == "__main__":

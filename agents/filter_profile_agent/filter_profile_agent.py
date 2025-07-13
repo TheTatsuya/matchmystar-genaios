@@ -19,9 +19,6 @@ session = GenAISession(jwt_token=AGENT_JWT)
 SUPABASE_URL = os.environ.get('SUPABASE_URL')
 SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
 
-logger.info(f"SUPABASE_URL: {SUPABASE_URL}")
-logger.info(f"SUPABASE_KEY: {'*' * 10 if SUPABASE_KEY else 'NOT SET'}")
-
 if not SUPABASE_URL or not SUPABASE_KEY:
     logger.error("SUPABASE_URL or SUPABASE_KEY not found in environment variables!")
 else:
@@ -43,7 +40,6 @@ def get_profiles(opposite_gender: str) -> List[Dict]:
         # First, let's check ALL profiles to see what's in the database
         logger.info("Checking ALL profiles in database...")
         all_profiles_response = supabase_client.table('profiles').select('*').execute()
-        logger.info(f"Total profiles in database: {len(all_profiles_response.data) if all_profiles_response.data else 0}")
         
         if all_profiles_response.data:
             for i, profile in enumerate(all_profiles_response.data):
@@ -52,8 +48,6 @@ def get_profiles(opposite_gender: str) -> List[Dict]:
         # Now try the specific gender query
         logger.info(f"Executing Supabase query for gender: '{opposite_gender}'")
         response = supabase_client.table('profiles').select('*').eq('gender', opposite_gender).execute()
-        logger.info(f"Supabase response: {response}")
-        logger.info(f"Found {len(response.data) if response.data else 0} profiles with gender '{opposite_gender}'")
         
         if response.data:
             logger.info(f"Sample profile: {response.data[0] if response.data else 'No data'}")
@@ -76,25 +70,21 @@ async def filter_profile_agent(
     agent_context: GenAIContext,
     user_profile: Annotated[dict, "User profile with lat, lon, gender, etc."]
 ):
-    logger.info(f"filter_profile_agent called with user_profile: {user_profile}")
     
     user_gender = user_profile.get('gender')
-    logger.info(f"User gender: {user_gender}")
     
     if user_gender not in ('male', 'female'):
         logger.error(f"Invalid gender: {user_gender}")
         return {"error": "User gender must be 'male' or 'female'"}
     
     opposite_gender = 'female' if user_gender == 'male' else 'male'
-    logger.info(f"Looking for profiles with gender: {opposite_gender}")
     
     matches = get_profiles(opposite_gender)
-    logger.info(f"Returning {len(matches)} matches")
     
     return matches
 
 async def main():
-    print(f"Agent with token '{AGENT_JWT}' started")
+    logging.info("Filter profile agent started.")
     await session.process_events()
 
 if __name__ == "__main__":
