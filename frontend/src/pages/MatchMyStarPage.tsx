@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/useToast';
 import { tokenService } from '@/services/apiService';
 import { websocketService } from '@/services/websocketService';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import '@/styles/markdown.css';
 // import { AgentResponse } from '@/types/websocket';
 
 // Temporary type for AgentResponse
@@ -139,14 +142,6 @@ const MatchMyStarPage = () => {
     return () => websocketService.removeMessageHandler(handleWebSocketMessage);
   }, [showSuccess]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // setHoroscopeFile(file); // This state was removed, so this line is no longer relevant
-      showSuccess(`${file.name} uploaded successfully`);
-    }
-  };
-
   // Update handleSubmit to use WebSocket
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -263,6 +258,90 @@ const MatchMyStarPage = () => {
       .trim();
   }
 
+  // Filtering logic for matches
+  function getFilteredMatches(matches: any[]) {
+    // 1. Get all 'good' matches
+    let goodMatches = matches.filter(m => m.message_type === 'good');
+    // 2. If there are good matches, show up to 5 of them
+    let filteredMatches;
+    if (goodMatches.length > 0) {
+      filteredMatches = goodMatches.slice(0, 5);
+    } else {
+      // 3. If no good matches, show only the best bad match
+      let badMatches = matches.filter(m => m.message_type === 'bad');
+      if (badMatches.length > 0) {
+        const bestBad = badMatches.reduce((best, m) =>
+          m.compatibility_score > (best?.compatibility_score || 0) ? m : best, null
+        );
+        filteredMatches = bestBad ? [bestBad] : [];
+      } else {
+        filteredMatches = [];
+      }
+    }
+    return filteredMatches;
+  }
+
+  function getCompatibilityLabel(score: number) {
+    if (score >= 70) return "Good Compatibility";
+    if (score >= 50) return "Moderate Compatibility";
+    return "Low Compatibility";
+  }
+
+  // Fallback extraction for plain string responses
+  function extractMainInfoFromFallback(str: string) {
+    const name = str.match(/\*\*Name\*\*: ([^\n]+)/)?.[1]?.trim() ||
+                 str.match(/\d+\. \*\*([^\*]+)\*\*/)?.[1]?.trim() || '';
+    const age = str.match(/\*\*Age\*\*: ([^\n]+)/)?.[1]?.trim() || '';
+    const location = str.match(/\*\*Location\*\*: ([^\n]+)/)?.[1]?.trim() || '';
+    const occupation = str.match(/\*\*Occupation\*\*: ([^\n]+)/)?.[1]?.trim() || '';
+    const compatibility = str.match(/\*\*Compatibility Score\*\*: ([^\n]+)/)?.[1]?.trim() || '';
+    const summary = str.match(/\*\*Summary\*\*: ([^\n]+)/)?.[1]?.trim()
+      || str.match(/\*\*Description\*\*: ([^\n]+)/)?.[1]?.trim()
+      || str.match(/\*\*Message\*\*: ([^\n]+)/)?.[1]?.trim()
+      || str.match(/\*\*Recommendation\*\*: ([^\n]+)/)?.[1]?.trim()
+      || '';
+    return { name, age, location, occupation, compatibility, summary };
+  }
+
+  // Helper to extract a field by label from a string
+  function extractFieldByLabel(str: string, label: string) {
+    const regex = new RegExp(`\\*\\*${label}\\*\\*:?\\s*([^\\n]+)`);
+    return str.match(regex)?.[1]?.trim() || '';
+  }
+
+  // Parser for fielded string profiles (e.g., '- **Name**: ...')
+  function parseFieldedStringProfile(str: string) {
+    const name = extractFieldByLabel(str, 'Name');
+    const age = extractFieldByLabel(str, 'Age');
+    const location = extractFieldByLabel(str, 'Location');
+    const occupation = extractFieldByLabel(str, 'Occupation');
+    const compatibility = extractFieldByLabel(str, 'Compatibility Score');
+    const summary = extractFieldByLabel(str, 'Summary') ||
+                    extractFieldByLabel(str, 'Description') ||
+                    extractFieldByLabel(str, 'Message') ||
+                    extractFieldByLabel(str, 'Recommendation');
+    // Astrological details (optional)
+    const nakshatra = extractFieldByLabel(str, 'Nakshatra');
+    const rashi = extractFieldByLabel(str, 'Rashi');
+    const koot = extractFieldByLabel(str, 'Koot Details');
+    return {
+      name, age, location, occupation, compatibility, summary,
+      astrological_details: { nakshatra, rashi, koot }
+    };
+  }
+
+  // Add a helper to determine if a string is a fielded profile
+  function isFieldedProfile(str: string) {
+    return /- \*\*Name\*\*:/.test(str);
+  }
+
+  // Helper: sanitize markdown to ensure blank lines before headings
+  function sanitizeMarkdown(md: string) {
+    // Ensure there is a blank line before every heading (##, ###, etc.)
+    return md.replace(/([^\n])\n(#+ )/g, '$1\n\n$2');
+  }
+
+  // Fallback rendering (when all parsing fails)
   return (
     <MainLayout currentPage="MatchMyStar">
       <div className="container mx-auto p-6">
@@ -351,21 +430,6 @@ const MatchMyStarPage = () => {
                 />
               </div>
 
-              {/* Horoscope Upload */}
-              <div>
-                <label className="text-sm font-medium flex items-center">
-                  <FileText className="mr-2" />
-                  Upload Horoscope (Optional)
-                </label>
-                <div className="mt-2">
-                  <Input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                  />
-                </div>
-              </div>
-
               {formError && <div className="text-red-500 text-sm">{formError}</div>}
               <Button 
                 onClick={handleSubmit} 
@@ -391,212 +455,20 @@ const MatchMyStarPage = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
                   <p>Finding your perfect match...</p>
                 </div>
-              ) : matches.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="mx-auto mb-4 h-12 w-12" />
-                  {noMatchMessage ? (
-                    isMultiProfileSummary(noMatchMessage) ? (
-                      (() => {
-                        const { matches: parsedMatches, analysis: parsedAnalysis } = parseSummaryString(noMatchMessage);
-                        return (
-                          <>
-                            {parsedAnalysis && (
-                              <Card className="border-l-4 border-l-blue-500 bg-blue-50 mb-4">
-                                <CardContent className="p-4">
-                                  <h3 className="font-semibold text-blue-800 mb-2">📊 Compatibility Analysis</h3>
-                                  <p className="text-blue-700 text-base whitespace-pre-line">{parsedAnalysis}</p>
-                                </CardContent>
-                              </Card>
-                            )}
-                            {parsedMatches.map((match, index) => (
-                              <Card key={index} className={`border-l-4 ${getCompatibilityColor(match.compatibility_score)} shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4`}>
-                                <CardContent className="p-6">
-                                  <div className="flex justify-between items-start mb-4">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-3">
-                                        <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl ${
-                                          match.compatibility_score >= 70 ? 'bg-gradient-to-br from-green-400 to-green-600' :
-                                          match.compatibility_score >= 50 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
-                                          'bg-gradient-to-br from-red-400 to-red-600'
-                                        }`}>
-                                          {match.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                          <h3 className="text-xl font-bold">{match.name}</h3>
-                                          <p className="text-sm text-muted-foreground">
-                                            {match.age} years • {match.location}
-                                          </p>
-                                          <p className="text-sm text-muted-foreground">
-                                            {match.occupation}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <Badge 
-                                        variant={match.compatibility_score >= 70 ? "default" : match.compatibility_score >= 50 ? "secondary" : "destructive"}
-                                        className="mb-2 text-lg px-4 py-2"
-                                      >
-                                        {match.compatibility_score}% Match
-                                      </Badge>
-                                      <p className="text-sm font-semibold text-muted-foreground">
-                                        {match.compatibility_level}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="border-t pt-4">
-                                    <h4 className="font-semibold mb-2 text-gray-800">Astrological Analysis</h4>
-                                    <div className="bg-blue-50 p-4 rounded-md">
-                                      <p className="text-sm text-gray-700 leading-relaxed">
-                                        {match.message_description}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </>
-                        );
-                      })()
-                    ) : (
-                      <Card className="mx-auto max-w-lg border-l-4 border-l-blue-500 bg-blue-50">
-                        <CardContent className="p-6">
-                          <p className="text-gray-700 text-base whitespace-pre-line">
-                            {stripMarkdown(noMatchMessage)}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )
-                  ) : (
-                    <p>No matches found yet. Fill your profile and click "Find Matches" to get started.</p>
-                  )}
-                </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Analysis Section */}
-                  {analysis && (
-                    <Card className="border-l-4 border-l-blue-500 bg-blue-50">
-                      <CardContent className="p-4">
-                        <h3 className="font-semibold text-blue-800 mb-2">📊 Compatibility Analysis</h3>
-                        <div className="space-y-2 text-sm">
-                          <p className="text-blue-700"><strong>{analysis.overall_assessment}</strong></p>
-                          {analysis.recommendation && (
-                            <p className="text-blue-600">{analysis.recommendation}</p>
-                          )}
-                          {analysis.statistics && (
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div>Average Score: <strong>{analysis.statistics.average_score}%</strong></div>
-                              <div>Best Score: <strong>{analysis.statistics.highest_score}%</strong></div>
-                              <div>Total Matches: <strong>{analysis.statistics.total_matches}</strong></div>
-                              <div>Good+ Matches: <strong>{analysis.statistics.good_matches + analysis.statistics.moderate_matches}</strong></div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                  
-                  {/* Status Message */}
-                  {getMatchStatusMessage(matches, analysis) && (
-                    <div className="text-center py-3 bg-gray-50 rounded-md">
-                      <p className="text-sm font-medium text-gray-700">
-                        {getMatchStatusMessage(matches, analysis)}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Matches Section */}
-                  {matches.map((match, index) => (
-                    <Card key={index} className={`border-l-4 ${getCompatibilityColor(match.compatibility_score)} shadow-lg hover:shadow-xl transition-shadow duration-300`}>
-                      <CardContent className="p-6">
-                        {/* Person Details Section */}
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl ${
-                                match.compatibility_score >= 70 ? 'bg-gradient-to-br from-green-400 to-green-600' :
-                                match.compatibility_score >= 50 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
-                                'bg-gradient-to-br from-red-400 to-red-600'
-                              }`}>
-                                {match.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <h3 className="text-xl font-bold">{match.name}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {match.age} years • {match.location}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {match.occupation}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            {/* Astrological Details */}
-                            {match.astrological_details && (
-                              <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50 p-3 rounded-md">
-                                {match.astrological_details.nakshatra && (
-                                  <div>
-                                    <span className="font-semibold">Nakshatra:</span> {match.astrological_details.nakshatra.name}
-                                  </div>
-                                )}
-                                {match.astrological_details.rashi && (
-                                  <div>
-                                    <span className="font-semibold">Rashi:</span> {match.astrological_details.rashi.name}
-                                  </div>
-                                )}
-                                {match.astrological_details.koot && (
-                                  <>
-                                    <div>
-                                      <span className="font-semibold">Varna:</span> {match.astrological_details.koot.varna}
-                                    </div>
-                                    <div>
-                                      <span className="font-semibold">Gana:</span> {match.astrological_details.koot.gana}
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Compatibility Score */}
-                          <div className="text-right">
-                            <Badge 
-                              variant={match.compatibility_score >= 70 ? "default" : match.compatibility_score >= 50 ? "secondary" : "destructive"}
-                              className="mb-2 text-lg px-4 py-2"
-                            >
-                              {match.compatibility_score}% Match
-                            </Badge>
-                            <p className="text-sm font-semibold text-muted-foreground">
-                              {match.compatibility_level}
-                            </p>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {match.total_points}/{match.maximum_points} points
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Compatibility Analysis */}
-                        <div className="border-t pt-4">
-                          <h4 className="font-semibold mb-2 text-gray-800">Astrological Analysis</h4>
-                          <div className="bg-blue-50 p-4 rounded-md">
-                            <p className="text-sm text-gray-700 leading-relaxed">
-                              {match.message_description || 
-                               `Compatibility Score: ${match.compatibility_score}% (${match.total_points}/${match.maximum_points} points). ${match.compatibility_level}.`}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Warning for not recommended matches */}
-                        {match.message_type === 'not-preferable' && (
-                          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-                            <p className="text-xs text-red-600 font-medium">
-                              ⚠️ This match has serious compatibility issues. Consider consulting an astrologer.
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="mx-auto max-w-2xl">
+                  <div className="markdown-body">
+                    {(() => {
+                      // Prefer the fallback markdown string if present, else try to stringify the matches/analysis
+                      const markdown = noMatchMessage ||
+                        (matches && matches.length > 0
+                          ? `# Match Results\n` + matches.map((m, i) => `## ${i+1}. ${m.name || 'Unknown'}\n- **Age:** ${m.age || ''}\n- **Location:** ${m.location || ''}\n- **Occupation:** ${m.occupation || ''}\n- **Compatibility Score:** ${m.compatibility_score || ''}%\n- **Message:** ${m.message_description || ''}`).join('\n\n')
+                          : 'No matches found.');
+                      const sanitized = sanitizeMarkdown(markdown);
+                      console.log('Markdown to render:', sanitized);
+                      return <ReactMarkdown remarkPlugins={[remarkGfm]}>{sanitized}</ReactMarkdown>;
+                    })()}
+                  </div>
                 </div>
               )}
             </CardContent>

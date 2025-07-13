@@ -31,7 +31,7 @@ async def geocode_agent(
     try:
         import httpx
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"https://nominatim.openstreetmap.org/search", params={
+            response = await client.get("https://nominatim.openstreetmap.org/search", params={
                 "q": place,
                 "format": "json",
                 "limit": 1
