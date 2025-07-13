@@ -2,8 +2,12 @@ import asyncio
 from typing import Annotated
 from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
+from dotenv import load_dotenv
+import os
 
-AGENT_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMjQ4NWMzOC0xMjE0LTQyODItYTVhNC1kZTRhODBlZjE3MDUiLCJleHAiOjI1MzQwMjMwMDc5OSwidXNlcl9pZCI6IjIzYTEwZGRmLTk2NWMtNGEzMy05MmZkLWI4ZDNmMmJmMGQ1NiJ9.uH_yCQl9ziPXOgjo8OlHr0cyilykEqiJPnHwgskqbp8" # noqa: E501
+load_dotenv()
+
+AGENT_JWT = os.environ.get("GEOCODE_AGENT_JWT", "")
 session = GenAISession(jwt_token=AGENT_JWT)
 
 

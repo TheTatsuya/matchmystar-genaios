@@ -4,12 +4,15 @@ import os
 from typing import Annotated, List, Dict, Any
 from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add the current directory to the path so we can import prokerala
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'shared_utils'))
 from prokerala import get_kundli_match
 
-AGENT_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNjU3YzY0YS0xNDlhLTRiZTktYTA3MS1hMmExMDAxYzA0NTUiLCJleHAiOjI1MzQwMjMwMDc5OSwidXNlcl9pZCI6IjIzYTEwZGRmLTk2NWMtNGEzMy05MmZkLWI4ZDNmMmJmMGQ1NiJ9.3UiyysjcctUBYic3xPoO0urzhPdIpU3D17yw4zVrm2c" # noqa: E501
+AGENT_JWT = os.environ.get("KUNDLI_MATCH_AGENT_JWT", "")
 session = GenAISession(jwt_token=AGENT_JWT)
 
 @session.bind(
