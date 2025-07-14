@@ -121,7 +121,7 @@ docker-compose up -d --build
 - User authentication and profile management
 
 ## Demo Preview
-See the app in action: [Watch Demo](https://youtu.be/your-demo-link)
+See the app in action: [Watch Demo](https://www.loom.com/share/17930b95747444b8b66152f866eb8905?sid=3da2aeae-8067-497c-8c01-e55a56b2794c)
 
 ## Documentation
 Check out Notion Docs: [MatchMyStar Documentation](https://www.notion.so/MatchMyStar-GenAIOS-Hackathon-Submission-22f043af801e80f683cbd643542431b5?source=copy_link)
