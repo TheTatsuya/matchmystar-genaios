@@ -83,7 +83,18 @@ KUNDLI_MATCH_AGENT_JWT=...
 - Get your `PROKERALA_CLIENT_ID` and `PROKERALA_CLIENT_SECRET` from Client Info
 - Set these as environment variables for the agents
 
-### 6. Run the System
+### 6. Registering Agents (Developer-Only, One-Time Setup)
+```bash
+cd cli
+python cli.py login -u <your-username> -p <your-password>
+python cli.py register_agent --name kundli_match_agent --description "Matches kundlis using Prokerala"
+```
+Once registered, copy the JWT tokens and place them in your .env file:
+```bash
+KUNDLI_MATCH_AGENT_JWT=eyJhbGciOi...
+```
+
+### 7. Run the System
 - Start backend, agents, and frontend (see GenAIOS docs or use Docker Compose)
 ### Prerequisites
 - Docker + Docker Compose
@@ -94,17 +105,6 @@ make up
 docker-compose up -d --build
 ```
 - Access the frontend at [http://localhost:3000/matchmystar](http://localhost:3000/matchmystar)
-
-### 7. Registering Agents (Developer-Only, One-Time Setup)
-```bash
-cd cli
-python cli.py login -u <your-username> -p <your-password>
-python cli.py register_agent --name kundli_match_agent --description "Matches kundlis using Prokerala"
-```
-Once registered, copy the JWT tokens and place them in your .env file:
-```bash
-KUNDLI_MATCH_AGENT_JWT=eyJhbGciOi...
-```
 
 ### 8. Test the Workflow
 - Fill out the required fields and click "Find Matches"
