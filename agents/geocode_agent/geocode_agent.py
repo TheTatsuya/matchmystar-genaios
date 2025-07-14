@@ -62,7 +62,7 @@ async def geocode_agent(
                             .execute()
                         if not query.data:
                             supabase_client.table("profiles").insert([enriched_profile]).execute()
-                except Exception as e:
+                except Exception:
                     # Log error without exposing sensitive info
                     import logging
                     logging.warning("Supabase insert skipped or failed.")
