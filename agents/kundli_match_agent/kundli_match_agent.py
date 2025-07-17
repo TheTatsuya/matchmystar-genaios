@@ -7,11 +7,11 @@ from genai_session.utils.context import GenAIContext
 from dotenv import load_dotenv
 import logging
 
-load_dotenv()
-
 # Add the current directory to the path so we can import prokerala
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'shared_utils'))
 from prokerala import get_kundli_match
+
+load_dotenv()
 
 AGENT_JWT = os.environ.get("KUNDLI_MATCH_AGENT_JWT", "")
 session = GenAISession(jwt_token=AGENT_JWT)
